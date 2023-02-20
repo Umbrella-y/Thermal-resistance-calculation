@@ -1,0 +1,118 @@
+#L-S-L-system-modifying
+#固液固体系建模
+
+units metal
+atom_style atomic
+atom_modify map array
+boundary p p p
+
+lattice fcc 4.04
+region box block -5 5 -5 5 -25 25
+##        -25--------------------------------------25    ##
+create_box 3 box
+region box1 block -5 5 -5 5 -25 25
+##        -25++++++++++++++++++0+++++++++++++++++++25    ##
+create_atoms 1 region box1
+region lower block INF INF INF INF INF -15
+##        -25++20------16++++++0+++++++16------20++25    ##
+region upper block INF INF INF INF 15 INF
+region guti union 2 lower upper 
+region ronghua block INF INF INF INF -15 15 
+##        -25++20------16++++++0+++++++16------20++25    ##
+##        -25lo+-20+lower+-16+mid+16+upper+20+up+25    ##
+group lower region lower 
+group upper region upper 
+group guti region guti
+group ronghua region ronghua
+set group lower type 1
+set group upper type 2
+set group guti type 3
+region kongwen block INF INF INF INF -25 25
+group kongwen region kongwen
+mass * 26.982
+
+velocity lower create 300 4928866 dist gaussian
+velocity upper create 300 4928866 dist gaussian
+velocity guti create 300 4928866 dist gaussian
+#velocity fix set 0 0 0 
+#fix f fix setforce 0 0 0
+pair_style eam/alloy
+pair_coeff * * Al-2009.eam.alloy Al Al Al
+thermo_style custom step ke pe temp press vol
+thermo 1
+#fix zwalls all wall/reflect zlo EDGE zhi EDGE
+timestep 0.001
+neighbor 0.3 bin
+neigh_modify every 5 delay 0 check yes
+
+##______________________________________________________________________
+compute keatom all ke/atom
+compute peatom all pe/atom 
+fix t1 kongwen npt temp 300 300 0.1 iso 1 1 1
+dump d1 all custom 100 300-950.dump id type x y z c_peatom c_keatom
+run 10000
+unfix t1
+fix t2 kongwen npt temp 300 950 0.1 iso 1 1 1
+run 70000
+unfix t2
+undump d1
+##______________________________________________________________________
+reset_timestep 0      
+dump d1 all custom 100 950-950.dump id type x y z c_peatom c_keatom
+fix t3 kongwen npt temp 950 950 0.1 iso 1 1 1 
+velocity all create 950 1234758 dist gaussian
+run 1000
+velocity all create 950 1234758 dist gaussian
+run 1000
+velocity all create 950 1234758 dist gaussian
+run 1000
+velocity all create 950 1234758 dist gaussian
+run 1000
+velocity all create 950 1234758 dist gaussian
+run 1000
+unfix t3
+undump d1
+##______________________________________________________________________
+reset_timestep 0    
+dump d1 all custom 100 950-1200.dump id type x y z c_peatom c_keatom
+fix f1 guti setforce 0 0 0
+velocity guti set 0 0 0
+fix t41 ronghua nvt temp 950 1200 0.1 #iso 1 1 1
+run 10000
+unfix t41
+fix t41 ronghua nvt temp 1200 1200 0.1 #iso 1 1 1
+run 20000
+unfix t41
+undump d1
+##______________________________________________________________________
+reset_timestep 0
+dump d1 all custom 100 1200-950.dump id type x y z c_peatom c_keatom
+fix t51 guti nvt temp 1200 950 0.1 #iso 1 1 1
+run 10000
+unfix t51
+fix t51 guti nvt temp 950 950 0.1 #iso 1 1 1
+run 10000
+unfix t51
+unfix f1
+undump d1
+##______________________________________________________________________
+reset_timestep 0    
+fix t6 all npt temp 950 950 0.1 iso 1 1 1
+run 5000
+velocity all create 950 126786785 dist gaussian
+run 1000
+velocity all create 950 12367867 dist gaussian
+run 1000
+velocity all create 950 12678758 dist gaussian
+run 1000
+velocity all create 950 12378958 dist gaussian
+run 1000
+velocity all create 950 12347788 dist gaussian
+run 1000
+dump d2 all custom 100 L-S-L-jieguo.dump id type x y z c_peatom c_keatom
+run 10000
+write_data moxing.data
+run 1 
+unfix t6
+undump d2
+##______________________________________________________________________
