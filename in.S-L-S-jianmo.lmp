@@ -31,14 +31,13 @@ region kongwen block INF INF INF INF -25 25
 group kongwen region kongwen
 mass * 26.982
 
-velocity lower create 300 4928866 dist gaussian
-velocity upper create 300 4928866 dist gaussian
 velocity guti create 300 4928866 dist gaussian
+velocity ronghua create 300 4928866 dist gaussian
 #velocity fix set 0 0 0 
 #fix f fix setforce 0 0 0
 pair_style eam/alloy
 pair_coeff * * Al-2009.eam.alloy Al Al Al
-thermo_style custom step ke pe temp press vol
+thermo_style custom step temp ke pe press vol
 thermo 1
 #fix zwalls all wall/reflect zlo EDGE zhi EDGE
 timestep 0.001
